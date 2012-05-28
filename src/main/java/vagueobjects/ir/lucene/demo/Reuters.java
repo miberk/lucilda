@@ -107,7 +107,8 @@ public class Reuters {
         //This index includes a single field, named "text"
         String[] fieldNames = {"text"};
         WordFilter filter = new AlphaFilter();
-        WordProcessor processor = new WordProcessor(indexPath, vocabSize,filter, fieldNames);
+        WordProcessor processor = new WordProcessor(indexPath, vocabSize,filter, fieldNames)
+                .withRequiredTerms();
         TopicBuilder builder = new TopicBuilder( processor, numTopics);
         builder.extractTopics();
         //Display topics

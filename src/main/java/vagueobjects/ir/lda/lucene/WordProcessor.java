@@ -27,10 +27,7 @@ import org.apache.lucene.util.PriorityQueue;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Passes through Lucene index and builds the vocabulary of terms with
@@ -48,6 +45,7 @@ public class WordProcessor {
      * Vocabulary, alphabetically sorted
      */
     private String[] vocabulary;
+    private String[] requiredTerms;
     private int[][] termsInDocs;
     private final WordFilter tokenFilter;
 
@@ -99,9 +97,15 @@ public class WordProcessor {
         this.minDocFreq = minDocFreq;
         this.tokenFilter = WordFilter.ACCEPT_ALL;
     }
-    
+
+    public WordProcessor withRequiredTerms(String... requiredTerms){
+        this.requiredTerms = requiredTerms;
+        return this;
+    }
+
     Counts countTerms() throws IOException{
         Counts counts = new Counts();
+        counts.addAll(requiredTerms);
         for(String field: fields){
             TermEnum termsEnum   = indexReader.terms(new Term(field));
             Term currentTerm;
@@ -149,13 +153,16 @@ public class WordProcessor {
         }
         return termQueue;
     }
-
     /**
      * Extracts tokens from Lucene index with highest TF-IDF scores
      * @throws IOException  once low-level IO Exception occurs
      */
-    public void process( ) throws IOException{
-        Counts counts = countTerms();
+    public void process() throws IOException{
+        process(new String[0]);
+    }
+
+    public void process( String... requiredTerms) throws IOException{
+        Counts counts = countTerms( );
  
         int numDocs = indexReader.numDocs();
         logger.debug("initial number of documents " + numDocs);
@@ -211,6 +218,13 @@ public class WordProcessor {
 
 
     static class Counts extends HashMap<String, Integer> {
+        
+        void addAll(String... inserts){
+            for(String key: inserts){
+                put(key, Integer.MAX_VALUE);
+            }
+        }
+
         void increment(String key, int count) {
             if (!containsKey(key)) {
                 put(key, count);
