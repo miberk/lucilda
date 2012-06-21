@@ -125,8 +125,6 @@ public class WordProcessor {
                         counts.increment(text, freq);
                     }
                 }
-
-                termsEnum.next();
             } while(termsEnum.next());
         }
         return counts;
